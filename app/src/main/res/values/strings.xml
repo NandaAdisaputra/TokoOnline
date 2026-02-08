@@ -1,3 +1,33 @@
 <resources>
     <string name="app_name">TokoOnline</string>
+    <string name="buat_akun">Buat Akun</string>
+    <string name="nama_lengkap">Nama Lengkap</string>
+    <string name="username">Username</string>
+    <string name="password">Password</string>
+    <string name="daftar_sekarang">DAFTAR SEKARANG</string>
+    <string name="sudah_punya_akun_login_di_sini">Sudah punya akun? Login di sini</string>
+    <string name="belum_punya_akun_daftar_di_sini">Belum punya akun? Daftar di sini</string>
+    <string name="login">LOGIN</string>
+    <string name="silakan_masuk">Silakan Masuk</string>
+    <string name="kode001">KODE001</string>
+    <string name="nama_produk">Nama Produk</string>
+    <string name="rp_0">Rp 0</string>
+    <string name="stok_0">Stok: 0</string>
+    <string name="edit">EDIT</string>
+    <string name="hapus">HAPUS</string>
+    <string name="edit_produk">Edit Produk</string>
+    <string name="kode_produk_tidak_dapat_diubah">Kode Produk (Tidak dapat diubah)</string>
+    <string name="harga_produk">Harga Produk</string>
+    <string name="stok">Stok</string>
+    <string name="simpan_perubahan">SIMPAN PERUBAHAN</string>
+    <string name="batal">BATAL</string>
+    <string name="tambah_data">tambah data</string>
+    <string name="cari_produk">Cari produk...</string>
+    <string name="simpan_produk">SIMPAN PRODUK</string>
+    <string name="harga">Harga</string>
+    <string name="kode_produk">Kode Produk</string>
+    <string name="tambah_produk_baru">Tambah Produk Baru</string>
+    <string name="_50000">50000</string>
+    <string name="stok_12">Stok 12</string>
+    <string name="icon_android">icon android</string>
 </resources>
