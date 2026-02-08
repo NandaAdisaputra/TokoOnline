@@ -1,76 +1,42 @@
 package com.nandaadisaputra.tokoonline.ui
 
 import android.os.Bundle
-import android.util.Log
-import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.isVisible
 import com.nandaadisaputra.tokoonline.databinding.ActivityRegisterBinding
-import com.nandaadisaputra.tokoonline.utils.AppHelper.pindah_halaman_bersih
 import com.nandaadisaputra.tokoonline.viewmodel.MainViewModel
+import com.nandaadisaputra.tokoonline.utils.AppHelper.pesan
+import com.nandaadisaputra.tokoonline.utils.AppHelper.klik
+import com.nandaadisaputra.tokoonline.utils.AppHelper.tampil
+import com.nandaadisaputra.tokoonline.utils.AppHelper.hilang
+import com.nandaadisaputra.tokoonline.utils.AppHelper.set_aktif
 
 class RegisterActivity : AppCompatActivity() {
-
-    private val binding by lazy { ActivityRegisterBinding.inflate(layoutInflater) }
+    private val b by lazy { ActivityRegisterBinding.inflate(layoutInflater) }
     private val vm: MainViewModel by viewModels()
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(binding.root)
+    override fun onCreate(s: Bundle?) {
+        super.onCreate(s)
+        setContentView(b.root)
 
-        setupAction()
-        setupObservers()
-    }
+        // 1. aksi_klik_daftar
+        b.btnRegister.klik {
+            val n = b.edtNama.text.toString()
+            val u = b.edtUsername.text.toString()
+            val p = b.edtPassword.text.toString()
 
-    private fun setupAction() {
-        binding.apply {
-            btnRegister.setOnClickListener {
-                val nama = edtNama.text.toString()
-                val user = edtUsername.text.toString()
-                val pass = edtPassword.text.toString()
-
-                if (nama.isNotEmpty() && user.isNotEmpty() && pass.isNotEmpty()) {
-                    // Status: eksekusi_pendaftaran
-                    vm.register(user, pass, nama)
-                } else {
-                    tampilPesan("Status: Harap isi semua kolom")
-                }
-            }
-
-            tvLogin.setOnClickListener { finish() }
-        }
-    }
-
-    private fun setupObservers() {
-        // Status: memantau_progres_loading
-        vm.is_loading.observe(this) {
-            binding.pbLoading.isVisible = it
-            // Menonaktifkan tombol saat loading agar tidak terjadi double click
-            binding.btnRegister.isEnabled = !it
+            if (n.isEmpty() || u.isEmpty() || p.isEmpty()) pesan("lengkapi_data")
+            else vm.register(u, p, n)
         }
 
-        vm.pesan_status.observe(this) {
-            if (it.isNotEmpty()) {
-                tampilPesan(it)
-                // Reset pesan setelah ditampilkan agar tidak muncul berulang
-                vm.pesan_status.value = ""
-            }
+        // 2. pantau_proses (loading -> sukses -> pesan)
+        vm.loading.observe(this) { sedang_muat ->
+            if (sedang_muat) b.pbLoading.tampil() else b.pbLoading.hilang()
+            b.btnRegister.set_aktif(!sedang_muat)
         }
 
-        vm.register_sukses.observe(this) { sukses ->
-            if (sukses == true) {
-                tampilPesan("Status: Pendaftaran berhasil, silakan masuk")
-                pindah_halaman_bersih(LoginActivity::class.java)
-                // Reset status di ViewModel sebelum finish agar tidak memicu observer lagi nanti
-                vm.register_sukses.value = false
+        vm.sukses.observe(this) { if (it) { pesan("daftar_berhasil"); finish() } }
 
-                finish()
-            }
-        }
-    }
-
-    private fun tampilPesan(msg: String) {
-        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+        vm.pesan.observe(this) { if (it.isNotEmpty()) pesan(it) }
     }
 }

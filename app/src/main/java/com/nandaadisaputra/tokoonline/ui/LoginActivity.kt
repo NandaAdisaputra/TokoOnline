@@ -2,82 +2,50 @@ package com.nandaadisaputra.tokoonline.ui
 
 import android.content.Intent
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.isVisible
 import com.nandaadisaputra.tokoonline.databinding.ActivityLoginBinding
-import com.nandaadisaputra.tokoonline.utils.AppHelper.pindah_halaman_bersih
 import com.nandaadisaputra.tokoonline.viewmodel.MainViewModel
+import com.nandaadisaputra.tokoonline.utils.AppHelper.pesan
+import com.nandaadisaputra.tokoonline.utils.AppHelper.pindah
+import com.nandaadisaputra.tokoonline.utils.AppHelper.klik
+import com.nandaadisaputra.tokoonline.utils.AppHelper.tampil
+import com.nandaadisaputra.tokoonline.utils.AppHelper.hilang
+import com.nandaadisaputra.tokoonline.utils.AppHelper.set_aktif
 
 class LoginActivity : AppCompatActivity() {
-
-    private val binding by lazy { ActivityLoginBinding.inflate(layoutInflater) }
+    private val b by lazy { ActivityLoginBinding.inflate(layoutInflater) }
     private val vm: MainViewModel by viewModels()
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(binding.root)
+    override fun onCreate(s: Bundle?) {
+        super.onCreate(s)
+        setContentView(b.root)
 
-        setupAction()
-        setupObservers()
-    }
+        // 1. aksi_klik_login
+        b.btnLogin.klik {
+            val u = b.edtUsername.text.toString()
+            val p = b.edtPassword.text.toString()
+            if (u.isEmpty() || p.isEmpty()) pesan("lengkapi_data") else vm.login(u, p)
+        }
 
-    private fun setupAction() {
-        binding.apply {
-            btnLogin.setOnClickListener {
-                val user = edtUsername.text.toString()
-                val pass = edtPassword.text.toString()
+        b.tvRegister.klik { pindah(RegisterActivity::class.java) }
 
-                if (user.isNotEmpty() && pass.isNotEmpty()) {
-                    // Status: mengeksekusi_login
-                    vm.login(user, pass)
-                } else {
-                    tampilPesan("Status: Username dan Password harus diisi")
+        // 2. pantau_proses (loading -> sukses -> pesan)
+        vm.loading.observe(this) { sedang ->
+            if (sedang) b.pbLoading.tampil() else b.pbLoading.hilang()
+            b.btnLogin.set_aktif(!sedang)
+        }
+
+        vm.sukses.observe(this) {
+            if (it) {
+                vm.sukses.value = false // reset_state
+                val i = Intent(this, MainActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 }
-            }
-
-            tvRegister.setOnClickListener {
-                startActivity(Intent(this@LoginActivity, RegisterActivity::class.java))
+                startActivity(i)
             }
         }
-    }
 
-    private fun setupObservers() {
-        vm.is_loading.observe(this) { loading ->
-            binding.pbLoading.isVisible = loading
-            binding.btnLogin.isEnabled = !loading
-        }
-
-        vm.pesan_status.observe(this) { pesan ->
-            if (!pesan.isNullOrEmpty()) {
-                tampilPesan(pesan)
-                // Status: meriset_pesan_agar_tidak_duplikat
-                vm.pesan_status.postValue("")
-            }
-        }
-        vm.login_sukses.observe(this) { data_user ->
-            if (data_user != null) {
-                // Status: log_validasi_data
-                android.util.Log.d("LOGIN_DEBUG", "User ditemukan: ${data_user.nama_lengkap}")
-
-                pindah_halaman_bersih(MainActivity::class.java)
-
-                // Status: riset_status_login
-                // Gunakan postValue agar tidak terjadi loop pada Main Thread
-                vm.login_sukses.postValue(null)
-
-                // Status: tutup_halaman_login
-                finish()
-            } else {
-                // Status: data_kosong_terdeteksi
-                android.util.Log.e("LOGIN_DEBUG", "Login_sukses dipicu tapi data user kosong!")
-            }
-        }
-    }
-    private fun tampilPesan(msg: String) {
-        if (msg.isNotEmpty()) {
-            Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
-        }
+        vm.pesan.observe(this) { if (it.isNotEmpty()) pesan(it) }
     }
 }

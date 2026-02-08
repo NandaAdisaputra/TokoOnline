@@ -4,49 +4,33 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.nandaadisaputra.tokoonline.databinding.ItemProdukBinding
-import com.nandaadisaputra.tokoonline.model.Product
-import com.nandaadisaputra.tokoonline.utils.AppHelper.toRupiah
+import com.nandaadisaputra.tokoonline.network.Product
+import java.text.NumberFormat
+import java.util.*
 
-class ProductAdapter(
-    private var list: MutableList<Product>,
-    private val onClick: (Product) -> Unit, // Diubah menjadi onClick untuk Detail
-    private val onDelete: (Product) -> Unit
-) : RecyclerView.Adapter<ProductAdapter.VH>() {
+class ProductAdapter(private val klik: (Product) -> Unit) : RecyclerView.Adapter<ProductAdapter.VH>() {
 
-    // Menggunakan format camelCase untuk binding di dalam ViewHolder
-    inner class VH(val binding: ItemProdukBinding) : RecyclerView.ViewHolder(binding.root)
+    private var list = emptyList<Product>()
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = VH(
-        ItemProdukBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+    fun set_data(d: List<Product>) {
+        list = d.reversed()
+        notifyDataSetChanged()
+    }
+
+    inner class VH(val b: ItemProdukBinding) : RecyclerView.ViewHolder(b.root)
+
+    override fun onCreateViewHolder(p: ViewGroup, t: Int) = VH(
+        ItemProdukBinding.inflate(LayoutInflater.from(p.context), p, false)
     )
 
-    override fun onBindViewHolder(holder: VH, position: Int) {
-        val produk_item = list[position]
-        holder.binding.apply {
-            // Sinkronisasi data ke View
-            tvNamaProduk.text = produk_item.nama_produk
-            tvHarga.text = produk_item.harga.toRupiah()
-            tvStok.text = "Stok: ${produk_item.stok}"
+    override fun onBindViewHolder(h: VH, pos: Int) = h.b.run {
+        val p = list[pos]
+        tvNamaProduk.text = p.nama_produk
+        tvStok.text = "stok: ${p.stok}"
+        tvHarga.text = NumberFormat.getCurrencyInstance(Locale("id", "ID")).format(p.harga).replace(",00", "")
 
-            // Status: klik_pendek untuk melihat detail/edit
-            root.setOnClickListener { onClick(produk_item) }
-
-            // Status: klik_lama untuk menghapus data
-            root.setOnLongClickListener {
-                onDelete(produk_item)
-                true
-            }
-        }
+        root.setOnClickListener { klik(p) }
     }
 
     override fun getItemCount() = list.size
-
-    fun updateData(new_list: List<Product>?) {
-        list.clear()
-        if (new_list != null) {
-            list.addAll(new_list)
-        }
-        // Memberitahu adapter bahwa data telah berubah (Status: refresh_list)
-        notifyDataSetChanged()
-    }
 }

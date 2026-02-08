@@ -5,63 +5,60 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.nandaadisaputra.tokoonline.databinding.ActivityDetailBinding
-import com.nandaadisaputra.tokoonline.model.Product
-import com.nandaadisaputra.tokoonline.utils.AppHelper.toRupiah
+import com.nandaadisaputra.tokoonline.network.Product
 import com.nandaadisaputra.tokoonline.viewmodel.MainViewModel
+import com.nandaadisaputra.tokoonline.utils.AppHelper.pesan
+import com.nandaadisaputra.tokoonline.utils.AppHelper.pindah
+import com.nandaadisaputra.tokoonline.utils.AppHelper.klik // status: ambil_bantuan_klik
 
 class DetailActivity : AppCompatActivity() {
-
-    private val binding by lazy { ActivityDetailBinding.inflate(layoutInflater) }
+    private val b by lazy { ActivityDetailBinding.inflate(layoutInflater) }
     private val vm: MainViewModel by viewModels()
 
-    // Status: Variabel statis untuk menerima data dari MainActivity tanpa Parcelize
     companion object {
-        var data_produk_detail: Product? = null
+        var p_detail: Product? = null
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(binding.root)
+    override fun onCreate(s: Bundle?) {
+        super.onCreate(s)
+        setContentView(b.root)
 
-        setupView()
-        setupAction()
-        setupObservers()
-    }
+        muat_ui()
 
-    private fun setupView() {
-        // Status: Menampilkan data produk yang dipilih
-        data_produk_detail?.let {
-            binding.apply {
-                tvDetailKode.text = "Kode: ${it.kode_produk}"
-                tvDetailNama.text = it.nama_produk
-                tvDetailHarga.text = it.harga.toRupiah()
-                tvDetailStok.text = "Persediaan: ${it.stok} unit"
+        // 1. aksi_edit_pakai_helper
+        b.btnEdit.klik {
+            EditActivity.p_edit = p_detail
+            pindah(EditActivity::class.java)
+        }
+
+        // 2. aksi_hapus_dengan_konfirmasi
+        b.btnHapus.klik {
+            AlertDialog.Builder(this).apply {
+                setTitle("hapus_produk")
+                setMessage("yakin_hapus?")
+                setPositiveButton("ya") { _, _ -> p_detail?.let { vm.hapus(it.kode_produk) } }
+                setNegativeButton("batal", null)
+            }.show()
+        }
+
+        // 3. pantau_perubahan
+        vm.pesan.observe(this) {
+            if (it.isNotEmpty()) pesan(it)
+            if (it == "status: terhapus") {
+                p_detail = null
+                finish()
             }
         }
     }
 
-    private fun setupAction() {
-        binding.btnHapus.setOnClickListener {
-            AlertDialog.Builder(this)
-                .setTitle("Konfirmasi")
-                .setMessage("Hapus produk ini?")
-                .setPositiveButton("Ya") { _, _ ->
-                    data_produk_detail?.let { vm.hapus(it.kode_produk) }
-                }
-                .setNegativeButton("Batal", null)
-                .show()
-        }
-
-        binding.btnEdit.setOnClickListener {
-            // Status: Mengirim data ke EditActivity sebelum berpindah
-            EditActivity.data_produk_edit = data_produk_detail
-            startActivity(android.content.Intent(this, EditActivity::class.java))
-        }
+    private fun muat_ui() = p_detail?.run {
+        b.tvDetailNama.text = nama_produk
+        b.tvDetailHarga.text = "Rp $harga"
+        b.tvDetailStok.text = "stok: $stok"
     }
 
-    private fun setupObservers() {
-        vm.aksi_sukses.observe(this) { sukses ->
-            if (sukses) finish() // Status: Kembali ke daftar jika berhasil hapus
-        }
+    override fun onResume() {
+        super.onResume()
+        muat_ui() // status: update_tampilan_otomatis_setelah_edit
     }
 }

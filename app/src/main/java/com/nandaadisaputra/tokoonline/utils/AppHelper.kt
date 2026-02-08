@@ -1,47 +1,38 @@
 package com.nandaadisaputra.tokoonline.utils
 
 import android.app.Activity
-import android.content.Context
 import android.content.Intent
-import android.os.Bundle
+import android.view.View
+import android.widget.Toast
+import androidx.core.view.isVisible
 import com.nandaadisaputra.tokoonline.network.ApiService
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import java.text.NumberFormat
-import java.util.Locale
 
 object AppHelper {
+    private const val BASE_URL = "http://10.0.2.2/api_toko/"
+
     val api: ApiService by lazy {
         Retrofit.Builder()
-            .baseUrl("http://10.0.2.2/api_toko/")
+            .baseUrl(BASE_URL)
             .addConverterFactory(GsonConverterFactory.create())
-            .build().create(ApiService::class.java)
+            .build()
+            .create(ApiService::class.java)
     }
 
-    fun Int.toRupiah() = NumberFormat.getCurrencyInstance(Locale("in", "ID")).format(this).replace(",00", "")
+    // status: bantuan_toast_dan_pindah_halaman
+    fun Activity.pesan(m: String) = Toast.makeText(this, m, Toast.LENGTH_SHORT).show()
 
-    // Status: template_navigasi_antar_halaman
-    fun Context.pindah_halaman(tujuan: Class<*>, data: Bundle? = null, selesaikan: Boolean = false) {
-        val intent_objek = Intent(this, tujuan)
-        data?.let {
-            intent_objek.putExtras(it)
-        }
-        startActivity(intent_objek)
-
-        // Status: mengecek_apakah_activity_sekarang_harus_ditutup
-        if (selesaikan && this is Activity) {
-            this.finish()
-        }
+    fun Activity.pindah(t: Class<*>, h: Boolean = false) {
+        startActivity(Intent(this, t))
+        if (h) finish()
     }
 
-    // Status: template_navigasi_bersih_stack (khusus Login/Logout)
-    fun Context.pindah_halaman_bersih(tujuan: Class<*>) {
-        val intent_objek = Intent(this, tujuan).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        }
-        startActivity(intent_objek)
-        if (this is Activity) {
-            this.finish()
-        }
-    }
+    // status: bantuan_klik_lebih_ringkas
+    fun View.klik(aksi: () -> Unit) = setOnClickListener { aksi() }
+
+    // status: bantuan_tampil_hilang_view
+    fun View.tampil() { isVisible = true }
+    fun View.hilang() { isVisible = false }
+    fun View.set_aktif(status: Boolean) { isEnabled = status }
 }

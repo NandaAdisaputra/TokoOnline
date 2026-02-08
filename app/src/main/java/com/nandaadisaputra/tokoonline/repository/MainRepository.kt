@@ -5,10 +5,15 @@ import com.nandaadisaputra.tokoonline.utils.AppHelper
 class MainRepository {
     private val api = AppHelper.api
 
-    suspend fun login(u: String, p: String) = api.login(u = u, p = p)
-    suspend fun register(u: String, p: String, n: String) = api.register(u = u, p = p, n = n)
-    suspend fun getProd(q: String?) = api.getProducts(q)
-    suspend fun delete(k: String) = api.deleteProduct(k = k)
-    suspend fun save(k: String, n: String, h: String, s: String, edit: Boolean) =
-        if (edit) api.updateProduct(k=k, n=n, h=h, s=s) else api.addProduct(k=k, n=n, h=h, s=s)
+    suspend fun login(u: String, p: String) = api.auth("login", u, p)
+
+    suspend fun register(u: String, p: String, n: String) = api.auth("register", u, p, n)
+
+    suspend fun ambil(q: String?) = api.get_produk(q)
+
+    suspend fun hapus(k: String) = api.crud("hapus", k)
+
+    // status: gunakan_if_sebagai_ekspresi_agar_lebih_singkat
+    suspend fun simpan(k: String, n: String, h: String, s: String, edit: Boolean) =
+        api.crud(if (edit) "edit" else "tambah", k, n, h, s)
 }

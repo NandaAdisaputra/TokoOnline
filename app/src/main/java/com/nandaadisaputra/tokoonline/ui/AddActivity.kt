@@ -1,69 +1,41 @@
 package com.nandaadisaputra.tokoonline.ui
 
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.isVisible
 import com.nandaadisaputra.tokoonline.databinding.ActivityAddBinding
 import com.nandaadisaputra.tokoonline.viewmodel.MainViewModel
+import com.nandaadisaputra.tokoonline.utils.AppHelper.pesan
+import com.nandaadisaputra.tokoonline.utils.AppHelper.klik
+import com.nandaadisaputra.tokoonline.utils.AppHelper.set_aktif
 
 class AddActivity : AppCompatActivity() {
-
-    private val binding by lazy { ActivityAddBinding.inflate(layoutInflater) }
+    private val b by lazy { ActivityAddBinding.inflate(layoutInflater) }
     private val vm: MainViewModel by viewModels()
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(binding.root)
+    override fun onCreate(s: Bundle?) {
+        super.onCreate(s)
+        setContentView(b.root)
 
-        setupAction()
-        setupObservers()
-    }
+        // 1. aksi_simpan_pakai_helper
+        b.btnSimpan.klik {
+            val k = b.edtKode.text.toString()
+            val n = b.edtNama.text.toString()
+            val h = b.edtHarga.text.toString()
+            val st = b.edtStok.text.toString()
 
-    private fun setupAction() {
-        binding.apply {
-            btnSimpan.setOnClickListener {
-                val kode_prod = edtKode.text.toString().trim()
-                val nama_prod = edtNama.text.toString().trim()
-                val harga_prod = edtHarga.text.toString().trim()
-                val stok_prod = edtStok.text.toString().trim()
-
-                if (kode_prod.isNotEmpty() && nama_prod.isNotEmpty() && harga_prod.isNotEmpty() && stok_prod.isNotEmpty()) {
-                    // Status: mengeksekusi_simpan_produk
-                    vm.simpan(kode_prod, nama_prod, harga_prod, stok_prod, edit = false)
-                } else {
-                    tampilPesan("Status: Harap lengkapi semua data")
-                }
-            }
-        }
-    }
-
-    private fun setupObservers() {
-        // Status: memantau_progres_simpan
-        vm.is_loading.observe(this) { loading ->
-            binding.pbLoading.isVisible = loading
-            // Mencegah klik ganda saat data sedang dikirim
-            binding.btnSimpan.isEnabled = !loading
+            if (k.isEmpty() || n.isEmpty()) pesan("lengkapi_data")
+            else vm.simpan(k, n, h, st, false)
         }
 
-        // Status: memantau_keberhasilan_aksi
-        vm.aksi_sukses.observe(this) { sukses ->
-            if (sukses == true) {
-                tampilPesan("Status: Produk berhasil ditambahkan")
-                // Reset state sukses agar tidak memicu finish() otomatis jika masuk lagi
-                vm.aksi_sukses.value = false
-                finish()
-            }
+        // 2. pantau_proses (loading -> sukses -> pesan)
+        vm.loading.observe(this) { sedang ->
+            b.btnSimpan.set_aktif(!sedang)
+            b.btnSimpan.text = if (sedang) "proses..." else "simpan"
         }
 
-        // Memantau pesan error dari server (misal kode produk duplikat)
-        vm.pesan_status.observe(this) { msg ->
-            if (msg.isNotEmpty()) tampilPesan(msg)
-        }
-    }
+        vm.sukses.observe(this) { if (it) finish() }
 
-    private fun tampilPesan(msg: String) {
-        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+        vm.pesan.observe(this) { if (it.isNotEmpty()) pesan(it) }
     }
 }
